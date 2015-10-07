@@ -97,6 +97,17 @@
         }
     });
 
+    $(document).ready(function() {
+      $.ajax({
+        url : "/get_uri",
+        type : "post",
+        success : function(data) {
+          console.log(data['uri']);
+          $("#xlab").text(data['uri'] + "/");
+        }
+      });
+    });
+
     if (document.getElementById("shorten-button") != null ) {
           $("#shorten-button").click(function(event) {
             $.ajax({

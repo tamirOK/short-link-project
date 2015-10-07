@@ -7,4 +7,5 @@ urlpatterns = [
     url(r'^serve$', views.serve, name='serve'),
     url(r'^(?P<query>[^/]+)/$', views.open, name='open'),
     url(r'^make$', views.make, name='make'),
+    url(r'^get_uri$', views.get_uri, name='get_uri'),
 ]

@@ -77,6 +77,11 @@ def serve(request):
         content_type="application/json")
 
 
+def get_uri(request):
+    return HttpResponse(json.dumps({'uri': request.META['HTTP_HOST']}),
+                        content_type="application/json")
+
+
 def make(request):
     long_url_form = UrlForm(request.POST['long_url'])
 
