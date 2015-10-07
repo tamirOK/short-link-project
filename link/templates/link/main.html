@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+<head>
+    <title>Url Shortener</title>
+    <link rel="stylesheet" type="text/css" href="{% static "css/main_style.css" %}" >
+    <script type="text/javascript" src="{% static "js/jquery.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/notify.js" %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static "css/mobile.css" %}" media="only screen and (max-device width:480px)"/>
+    <link rel="stylesheet" type="text/css" href="{% static "css/pure-min.css" %}" >
+
+
+</head>
+
+{% if error_message %} <p><strong>{{ error_message }} </strong></p> {% endif %}
+
+<body onload="tempFunction()">
+<div class="writing">
+  <h1>Shorten your URL!</h1>
+  <!--<p id="main-writing">Shorten your URL! </p> -->
+</div>
+
+
+<!--  Starts here -->
+
+<!--  Ends here -->
+
+<div id="container">
+
+  <form method="POST" id="ajaxform" class="pure-form">
+      {% csrf_token %}
+
+        <input class="pure-input-2-3" id ="id_url" type="text" placeholder="Input your url"/>
+        <input type="submit" value="Shorten" id="shorten-button" class="pure-button pure-button-primary">
+        <div id="wrapper">
+          <br><span id="xlab">xlab.kz/</span>
+          <input class="pure-input-1-4" id="pure-input-1-4" type="text" placeholder="custom url">
+        </div>
+  </form>
+
+  <div id="invalid-link-provided">
+    Invalid link provided!
+  </div>
+</div>
+
+
+{% if query %}
+<h2>{{ query}}</h2>
+{% endif %}
+
+</body>
+
+
+<script>
+    var flag = false;
+    var origin = "";
+
+    function tempFunction() {
+      document.getElementById("id_url").addEventListener("change", addHttp);
+    }
+
+    function addHttp() {
+
+      var tempElement = document.getElementById("id_url");
+
+      if (tempElement.value != null &&  tempElement.value.search("http://") == -1 && tempElement.value.search("https://") == -1 &&
+          tempElement.value != "")
+        tempElement.value = "http://" + tempElement.value;
+    }
+
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+            }
+        }
+    });
+
+    if (document.getElementById("shorten-button") != null ) {
+          $("#shorten-button").click(function(event) {
+            $.ajax({
+              url: "/serve",
+              type: "post",
+              //data: "url=" + $('#id_url').val(),
+            //  data: JSON.stringify({ "url" : $("#id_url").val(), "long_url" : $(".pure-input-1-4").val() }),
+              data : {
+                'url' : $("#id_url").val(),
+                'short_url' : $(".pure-input-1-4").val(),
+              },
+              dataType: 'json',
+              // headers: {"Content-Type": "application/json"},
+              success: function (data) {
+                //var temp_link = $.parseJSON(data);
+                $("#id_url").val(data['url']);
+                $("#id_url").css('border-color','silver');
+                $(".pure-input-1-4").css('border-color','silver');
+                //$("#invalid-link-provided").css('visibility','hidden');
+
+              },
+              error: function(jhr){
+                data = jhr.responseJSON;
+                /*$(".writing").notify(
+                  "Invalid link",
+                  { position: "bottom-center"}
+                ); */
+                if (data['message'][0] == 'S') {
+                  $(".pure-input-1-4").css('border-color','red');
+                  $(".pure-input-1-4").notify("Such link exists!",{ position: "right-middle" })
+                } else {
+                  $("#id_url").css('border-color','red')
+                  $("#id_url").notify(
+                    "Invalid link",
+                    { position: "left-center"}
+                  );
+                }
+                //$("#id_url").css('border-color','red');
+                //$("#invalid-link-provided").css('visibility','visible');
+              }
+            });
+
+            return false;
+          });
+    }
+
+
+  </script>
+</html>
