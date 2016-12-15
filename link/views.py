@@ -32,28 +32,23 @@ def open(request, query):
 
 
 def serve(request):
-    # d = json.loads(request.body)
-    # url = d.get("url", None)
 
     form = UrlForm(request.POST)
 
     if not form.is_valid():
-        resp = HttpResponse(
-            json.dumps({"message": "Invalid url"}),
-            content_type="application/json", status=400)
-        # resp.status_code = 400
+        resp = HttpResponse(json.dumps({"message": "Invalid url"}), content_type="application/json", status=400)
         return resp
 
     url = form.cleaned_data['url']
     short_url = form.cleaned_data.get('short_url', None)
-    if short_url:
+
+    if short_url: # if short url is received
         url_obj = MyUrl.objects.filter(short_link=short_url)
-        if url_obj.exists():
-            resp = HttpResponse(
-                json.dumps({"message": "Such url already exists!"}),
-                content_type="application/json", status=400)
-            # resp.status_code = 400
+        if url_obj.exists(): # if such url exists in DB
+            resp = HttpResponse(json.dumps({"message": "Such url already exists!"}), content_type="application/json",
+                                status=400)
             return resp
+
         new_url = MyUrl(link_to=url, short_link=short_url)
         new_url.save()
         short_link = request.build_absolute_uri(short_url)
@@ -68,7 +63,7 @@ def serve(request):
     else:
         new_url = MyUrl(link_to=url)
         new_url.save()
-        base62id = id_to_short_url(new_url.id)
+        base62id = id_to_short_url(new_url.id) # get hash of url
         new_url.short_link = base62id
         new_url.save()
         short_link = request.build_absolute_uri(base62id)
@@ -81,29 +76,3 @@ def get_uri(request):
     return HttpResponse(json.dumps({'uri': request.META['HTTP_HOST']}),
                         content_type="application/json")
 
-
-def make(request):
-    long_url_form = UrlForm(request.POST['long_url'])
-
-    if not long_url_form.is_valid():
-        resp = HttpResponse(
-            json.dumps({"message": "Invalid url"}),
-            content_type="application/json", status=400)
-        # resp.status_code = 400
-        return resp
-
-    url_obj = MyUrl.objects.filter(link_to=request.POST['short_url'])
-
-    if url_obj.exists():
-        resp = HttpResponse(
-            json.dumps({"message": "Such url already exists!"}),
-            content_type="application/json", status=400)
-        # resp.status_code = 400
-        return resp
-
-    new_url = MyUrl(link_to=request.POST['long_url'])
-    new_url.short_link = request.POST['short_url']
-    new_url.save()
-    return HttpResponse(
-        json.dumps({'url': request.POST['short_url']}),
-        content_type="application/json")
